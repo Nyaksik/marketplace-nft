@@ -68,10 +68,6 @@ contract Marketplace {
             _tokenERC721.ownerOf(_tokenId) == msg.sender,
             "Only the owner can do this."
         );
-        require(
-            _tokenERC721.ownerOf(_tokenId) != address(this),
-            "Token is already up for sale."
-        );
         _tokenERC721.transferFrom(msg.sender, address(this), _tokenId);
         Offer memory offer = Offer({
             owner: msg.sender,
@@ -88,7 +84,7 @@ contract Marketplace {
             offer.status == LotStatus.IN_PROGRESS,
             "Lot must be in progress."
         );
-        require(offer.price == msg.value, "Insufficient quantity to buy.");
+        require(offer.price == msg.value, "Incorrect amount.");
         offer.status = LotStatus.FINISHED;
         payable(offer.owner).transfer(msg.value);
         _tokenERC721.transferFrom(address(this), msg.sender, _tokenId);
@@ -109,16 +105,11 @@ contract Marketplace {
         );
     }
 
-    function listItemOnAuctuion(uint256 _tokenId, uint256 _price) external {
+    function listItemOnAuction(uint256 _tokenId, uint256 _price) external {
         require(
             _tokenERC721.ownerOf(_tokenId) == msg.sender,
             "Only the owner can do this."
         );
-        require(
-            _tokenERC721.ownerOf(_tokenId) != address(this),
-            "Token is already up for sale."
-        );
-
         _tokenERC721.transferFrom(msg.sender, address(this), _tokenId);
         Lot memory lot = Lot({
             owner: msg.sender,
@@ -144,7 +135,7 @@ contract Marketplace {
             "Your bid is less than the current bid."
         );
         if (lot.currentBidder != address(0x0)) {
-            payable(lot.currentBidder).transfer(lot.currentBid); // TODO: Проверить на тестах, уходят ли деньги на нулевой адрес
+            payable(lot.currentBidder).transfer(lot.currentBid);
         }
         lot.currentBidder = msg.sender;
         lot.currentBid = msg.value;
