@@ -143,7 +143,9 @@ contract Marketplace {
             msg.value > lot.currentBid,
             "Your bid is less than the current bid."
         );
-        payable(lot.currentBidder).transfer(lot.currentBid);
+        if (lot.currentBidder != address(0x0)) {
+            payable(lot.currentBidder).transfer(lot.currentBid); // TODO: Проверить на тестах, уходят ли деньги на нулевой адрес
+        }
         lot.currentBidder = msg.sender;
         lot.currentBid = msg.value;
         lot.numberOfBets++;
