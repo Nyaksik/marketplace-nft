@@ -6,7 +6,6 @@
     "compile": "npx hardhat clean && npx hardhat compile",
     "local": "npx hardhat run scripts/deploy.ts --network localhost",
     "rinkeby": "npx hardhat run scripts/deploy.ts --network rinkeby",
-    "mint": "npx hardhat run scripts/mintArrayURI.ts --network rinkeby",
     "coverage": "npx hardhat coverage",
     "help": "npx hardhat help"
   },

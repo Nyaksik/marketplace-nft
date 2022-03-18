@@ -6,7 +6,7 @@ import "@nomiclabs/hardhat-waffle";
 import "@typechain/hardhat";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
-// import "./task/task"
+import "./task/task";
 
 dotenv.config();
 
@@ -16,10 +16,12 @@ const config: HardhatUserConfig = {
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_PRIVATE_KEY}`,
       accounts:
-        process.env.METAMASK_OWNER_PRIVATE_KEY !== undefined ? [
-          process.env.METAMASK_OWNER_PRIVATE_KEY as string,
-          process.env.METAMASK_PRIVATE_KEY as string
-        ] : [],
+        process.env.METAMASK_OWNER_PRIVATE_KEY !== undefined
+          ? [
+              process.env.METAMASK_OWNER_PRIVATE_KEY as string,
+              process.env.METAMASK_PRIVATE_KEY as string,
+            ]
+          : [],
     },
   },
   gasReporter: {

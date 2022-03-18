@@ -1,44 +1,93 @@
-# Advanced Sample Hardhat Project
+# Marketplace contact project
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+# Link
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
+- __[Link to the marketplace contract](https://rinkeby.etherscan.io/address/0x8fA8451B5cec61FE8057e6A19C18c0eb2616e15A)__ (Rinkeby test network)
+- __[Link to the NFT contract](https://rinkeby.etherscan.io/address/0x9d263ca1fe42dDECe277693B80746A0de4BC2CaB)__ (Rinkeby test network)
 
-Try running some of the following tasks:
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
+# Basic tasks for interacting with a contract
+
+## Use it to compile the contract
+
+```TypeScript
+npx hardhat clean && npx hardhat compile
+// or
+npm run compile
+```
+
+## Use it to deploy the contract locally
+
+- __Deploy marketplace contract__
+
+```TypeScript
+npx hardhat run scripts/deploy.ts --network localhost
+// or
+npm run local
+```
+
+- __Deploy NFT__
+
+```TypeScript
+npx hardhat run scripts/deployToken.ts --network localhost
+```
+
+## Use it to deploy the contract in the rinkeby test network
+
+- __Deploy marketplace contract__
+
+```TypeScript
+npx hardhat run scripts/deploy.ts --network rinkeby
+// or
+npm run rinkeby
+```
+
+- __Deploy NFT__
+
+```TypeScript
+npx hardhat run scripts/deployToken.ts --network rinkeby
+```
+
+## Use it to test
+
+```TypeScript
 npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
+// or
+npm run test
+```
+
+## Use it to view the test coverage
+
+```TypeScript
 npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
+// or
+npm run coverage
+```
+
+## Use it to view global options and available tasks
+
+```TypeScript
+npx hardhat help
+// or
+npm run help
 ```
 
 # Etherscan verification
 
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
+To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Rinkeby.
 
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
+In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Rinkeby node URL (eg from Infura), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
 
-```shell
-hardhat run --network ropsten scripts/deploy.ts
+```TypeScript
+npx hardhat run scripts/deploy.ts --network rinkeby
+// or
+npm run rinkeby
 ```
 
 Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
 
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
+```TypeScript
+npx hardhat verify --network rinkeby DEPLOYED_CONTRACT_ADDRESS
 ```
 
 # Performance optimizations
