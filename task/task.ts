@@ -25,7 +25,7 @@ task("createItem", "Create an NFT")
       signer
     );
 
-    await instance.createItem(uri);
+    const tokenId = await instance.createItem(uri);
 
-    console.log(`Token with ${uri} has been created`);
+    console.log(`Token with ${uri} has been created with id: ${tokenId}`);
   });

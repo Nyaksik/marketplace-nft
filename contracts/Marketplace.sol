@@ -113,11 +113,11 @@ contract Marketplace {
 
     function makeBet(uint256 _tokenId) external payable {
         Lot storage lot = lots[_tokenId];
-        if (lot.status != LotStatus.IN_PROGRESS) revert LotNotInProgress();
         require(
             block.timestamp <= lot.startTime + AUCTION_DURATION,
             "Auction not over."
         );
+        if (lot.status != LotStatus.IN_PROGRESS) revert LotNotInProgress();
         if (msg.value < lot.currentBid)
             revert IncorrectAmount({price: lot.currentBid, amount: msg.value});
         if (lot.currentBidder != address(0x0)) {
