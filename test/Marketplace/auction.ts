@@ -18,7 +18,7 @@ export default (): void => {
       tokenId,
       numberOfBets,
       startTime,
-    ] = await this.instance.getLot(1);
+    ] = await this.instance.lots(1);
     const resultData = [
       owner,
       status,
@@ -47,7 +47,7 @@ export default (): void => {
 
     await expect(
       this.instance.connect(this.addr1).listItemOnAuction(1, this.basePrice)
-    ).to.be.revertedWith("Only the owner can do this.");
+    ).to.be.revertedWith("NotOwner()");
   });
   it("MARKETPLACE_AUCTION: MakeBet works correctly", async function (): Promise<void> {
     await this.instanceERC721.changeMinterRole(this.instance.address);
@@ -62,7 +62,7 @@ export default (): void => {
     await bet.wait();
 
     const [_, __, currentBid, currentBidder, ___, numberOfBets] =
-      await this.instance.getLot(1);
+      await this.instance.lots(1);
     const resultData = [String(currentBid), currentBidder, +numberOfBets];
     const expectData = [this.bigPrice, this.addr1.address, 1];
 
@@ -98,7 +98,12 @@ export default (): void => {
 
     await expect(
       this.instance.connect(this.addr1).makeBet(1, { value: this.bigPrice })
-    ).to.be.revertedWith("Lot must be in progress.");
+    ).to.be.revertedWith("Auction not over.");
+  });
+  it("MARKETPLACE_AUCTION: Lot must be in progress", async function (): Promise<void> {
+    await expect(
+      this.instance.connect(this.addr1).makeBet(1, { value: this.bigPrice })
+    ).to.be.revertedWith("LotNotInProgress()");
   });
   it("MARKETPLACE_AUCTION: Bet amount must be greater than the current bet", async function (): Promise<void> {
     await this.instanceERC721.changeMinterRole(this.instance.address);
@@ -108,7 +113,7 @@ export default (): void => {
 
     await expect(
       this.instance.connect(this.addr1).makeBet(1, { value: this.lowPrice })
-    ).to.be.revertedWith("Your bid is less than the current bid.");
+    ).to.be.revertedWith("IncorrectAmount(1000000, 1000)");
   });
   it("MARKETPLACE_AUCTION: FinishAuction works correctly", async function (): Promise<void> {
     await this.instanceERC721.changeMinterRole(this.instance.address);
@@ -141,7 +146,7 @@ export default (): void => {
     await finish.wait();
 
     const balance = await this.instanceERC721.balanceOf(this.addr3.address);
-    const [_, status] = await this.instance.getLot(1);
+    const [_, status] = await this.instance.lots(1);
 
     await expect(() => finish).to.changeEtherBalances(
       [this.instance, this.owner],
@@ -152,8 +157,18 @@ export default (): void => {
   });
   it("MARKETPLACE_AUCTION: Lot must be in progress", async function (): Promise<void> {
     await expect(this.instance.finishAuction(1)).to.be.revertedWith(
-      "Lot must be in progress."
+      "LotNotInProgress()"
     );
+  });
+  it("MARKETPLACE_AUCTION: Lot must be in progress", async function (): Promise<void> {
+    await this.instanceERC721.changeMinterRole(this.instance.address);
+    await this.instance.createItem(this.testCID);
+    await this.instanceERC721.approve(this.instance.address, 1);
+    await this.instance.listItemOnAuction(1, this.basePrice);
+
+    await expect(
+      this.instance.connect(this.addr1).finishAuction(1)
+    ).to.be.revertedWith("Auction not over.");
   });
   it("MARKETPLACE_AUCTION: CancelAuction works correctly", async function (): Promise<void> {
     await this.instanceERC721.changeMinterRole(this.instance.address);
@@ -179,7 +194,7 @@ export default (): void => {
 
     await finish.wait();
 
-    const [_, status] = await this.instance.getLot(1);
+    const [_, status] = await this.instance.lots(1);
     const balance = await this.instanceERC721.balanceOf(this.owner.address);
 
     await expect(() => finish).to.changeEtherBalances(

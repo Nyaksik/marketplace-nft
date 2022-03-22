@@ -11,8 +11,8 @@ export default (): void => {
 
     expect(minBets).to.eq(2);
   });
-  it("MARKETPLACE_VIEW: Address of the tokenERTS721 is set correctly", async function (): Promise<void> {
-    const address = await this.instance.getNFTContractAddress();
+  it("MARKETPLACE_VIEW: Address of the tokenERC721 is set correctly", async function (): Promise<void> {
+    const address = await this.instance.tokenERC721();
 
     expect(address).to.eq(this.instanceERC721.address);
   });

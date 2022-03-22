@@ -1,7 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import "./TokenForMarket.sol";
+import "../interface/ITokenForMarket.sol";
+
+error NotOwner();
+error LotNotInProgress();
+error IncorrectAmount(uint256 price, uint256 amount);
 
 contract Marketplace {
     enum LotStatus {
@@ -28,77 +32,60 @@ contract Marketplace {
         uint256 startTime;
     }
 
+    address public tokenERC721;
     uint256 public constant AUCTION_DURATION = 3 days;
     uint256 public constant MINIMUM_NUMBER_OF_BETS = 2;
 
     mapping(uint256 => Offer) public offers;
     mapping(uint256 => Lot) public lots;
 
-    TokenForMarket private _tokenERC721;
-
     constructor(address _token) {
-        _tokenERC721 = TokenForMarket(_token);
-    }
-
-    function getNFTContractAddress()
-        external
-        view
-        returns (address tokenAddress)
-    {
-        tokenAddress = address(_tokenERC721);
-    }
-
-    function getOffer(uint256 _id) external view returns (Offer memory) {
-        return offers[_id];
-    }
-
-    function getLot(uint256 _id) external view returns (Lot memory) {
-        return lots[_id];
+        tokenERC721 = _token;
     }
 
     function createItem(string memory _tokenURI)
         external
         returns (uint256 tokenId)
     {
-        tokenId = _tokenERC721.mint(msg.sender, _tokenURI);
+        tokenId = ITokenForMarket(tokenERC721).mint(msg.sender, _tokenURI);
     }
 
     function listItem(uint256 _tokenId, uint256 _price) external {
-        require(
-            _tokenERC721.ownerOf(_tokenId) == msg.sender,
-            "Only the owner can do this."
+        if (ITokenForMarket(tokenERC721).ownerOf(_tokenId) != msg.sender)
+            revert NotOwner();
+        ITokenForMarket(tokenERC721).transferFrom(
+            msg.sender,
+            address(this),
+            _tokenId
         );
-        _tokenERC721.transferFrom(msg.sender, address(this), _tokenId);
-        Offer memory offer = Offer({
+        offers[_tokenId] = Offer({
             owner: msg.sender,
             status: LotStatus.IN_PROGRESS,
             price: _price,
             tokenId: _tokenId
         });
-        offers[_tokenId] = offer;
     }
 
     function buyItem(uint256 _tokenId) external payable {
         Offer storage offer = offers[_tokenId];
-        require(
-            offer.status == LotStatus.IN_PROGRESS,
-            "Lot must be in progress."
-        );
-        require(offer.price == msg.value, "Incorrect amount.");
+        if (offer.status != LotStatus.IN_PROGRESS) revert LotNotInProgress();
+        if (offer.price != msg.value)
+            revert IncorrectAmount({price: offer.price, amount: msg.value});
         offer.status = LotStatus.FINISHED;
         payable(offer.owner).transfer(msg.value);
-        _tokenERC721.transferFrom(address(this), msg.sender, _tokenId);
+        ITokenForMarket(tokenERC721).transferFrom(
+            address(this),
+            msg.sender,
+            _tokenId
+        );
     }
 
     function cancel(uint256 _tokenId) external {
         Offer storage offer = offers[_tokenId];
-        require(
-            offer.status == LotStatus.IN_PROGRESS,
-            "Lot must be in progress."
-        );
-        require(offer.owner == msg.sender, "Only the owner can do this.");
+        if (offer.status != LotStatus.IN_PROGRESS) revert LotNotInProgress();
+        if (offer.owner != msg.sender) revert NotOwner();
         offer.status = LotStatus.CANCELED;
-        _tokenERC721.transferFrom(
+        ITokenForMarket(tokenERC721).transferFrom(
             address(this),
             offers[_tokenId].owner,
             _tokenId
@@ -106,12 +93,14 @@ contract Marketplace {
     }
 
     function listItemOnAuction(uint256 _tokenId, uint256 _price) external {
-        require(
-            _tokenERC721.ownerOf(_tokenId) == msg.sender,
-            "Only the owner can do this."
+        if (ITokenForMarket(tokenERC721).ownerOf(_tokenId) != msg.sender)
+            revert NotOwner();
+        ITokenForMarket(tokenERC721).transferFrom(
+            msg.sender,
+            address(this),
+            _tokenId
         );
-        _tokenERC721.transferFrom(msg.sender, address(this), _tokenId);
-        Lot memory lot = Lot({
+        lots[_tokenId] = Lot({
             owner: msg.sender,
             status: LotStatus.IN_PROGRESS,
             currentBid: _price,
@@ -120,20 +109,17 @@ contract Marketplace {
             numberOfBets: 0,
             startTime: block.timestamp
         });
-        lots[_tokenId] = lot;
     }
 
     function makeBet(uint256 _tokenId) external payable {
         Lot storage lot = lots[_tokenId];
+        if (lot.status != LotStatus.IN_PROGRESS) revert LotNotInProgress();
         require(
-            lot.status == LotStatus.IN_PROGRESS &&
-                block.timestamp <= lot.startTime + AUCTION_DURATION,
-            "Lot must be in progress."
+            block.timestamp <= lot.startTime + AUCTION_DURATION,
+            "Auction not over."
         );
-        require(
-            msg.value > lot.currentBid,
-            "Your bid is less than the current bid."
-        );
+        if (msg.value < lot.currentBid)
+            revert IncorrectAmount({price: lot.currentBid, amount: msg.value});
         if (lot.currentBidder != address(0x0)) {
             payable(lot.currentBidder).transfer(lot.currentBid);
         }
@@ -145,15 +131,15 @@ contract Marketplace {
     function finishAuction(uint256 _tokenId) public {
         Lot storage lot = lots[_tokenId];
         require(
-            lot.status == LotStatus.IN_PROGRESS &&
-                block.timestamp >= lot.startTime + AUCTION_DURATION,
-            "Lot must be in progress."
+            block.timestamp >= lot.startTime + AUCTION_DURATION,
+            "Auction not over."
         );
+        if (lot.status != LotStatus.IN_PROGRESS) revert LotNotInProgress();
         if (lot.numberOfBets <= MINIMUM_NUMBER_OF_BETS) {
             _cancelAuction(_tokenId, lot);
         } else {
             lot.status = LotStatus.FINISHED;
-            _tokenERC721.transferFrom(
+            ITokenForMarket(tokenERC721).transferFrom(
                 address(this),
                 lot.currentBidder,
                 _tokenId
@@ -165,6 +151,10 @@ contract Marketplace {
     function _cancelAuction(uint256 _tokenId, Lot storage lot) private {
         lot.status = LotStatus.CANCELED;
         payable(lot.currentBidder).transfer(lot.currentBid);
-        _tokenERC721.transferFrom(address(this), lot.owner, _tokenId);
+        ITokenForMarket(tokenERC721).transferFrom(
+            address(this),
+            lot.owner,
+            _tokenId
+        );
     }
 }
