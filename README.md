@@ -2,8 +2,8 @@
 
 # Link
 
-- __[Link to the marketplace contract](https://rinkeby.etherscan.io/address/0x8fA8451B5cec61FE8057e6A19C18c0eb2616e15A)__ (Rinkeby test network)
-- __[Link to the NFT contract](https://rinkeby.etherscan.io/address/0x9d263ca1fe42dDECe277693B80746A0de4BC2CaB)__ (Rinkeby test network)
+- __[Link to the marketplace contract](https://rinkeby.etherscan.io/address/0x9065338103DC13a90c16CB96cD522209be15E55c)__ (Rinkeby test network)
+- __[Link to the NFT contract](https://rinkeby.etherscan.io/address/0x132c165B83A7a3aFE4d5795F3916BDEBA73C0275)__ (Rinkeby test network)
 
 
 # Basic tasks for interacting with a contract

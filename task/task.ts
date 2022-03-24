@@ -21,10 +21,10 @@ task("createItem", "Create an NFT")
     const [signer] = await ethers.getSigners();
     const instance = await ethers.getContractAt(
       "Marketplace",
-      process.env.TOKEN_ADDRESS as string,
+      process.env.MARKETPLACE_ADDRESS as string,
       signer
     );
-
+    
     const tokenId = await instance.createItem(uri);
 
     console.log(`Token with ${uri} has been created with id: ${tokenId}`);
